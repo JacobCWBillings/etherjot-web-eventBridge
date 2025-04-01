@@ -45,6 +45,7 @@ interface Page {
     path: string
 }
 
+// Updated Article interface with proposal tracking fields
 export interface Article {
     title: string
     preview: string
@@ -58,6 +59,10 @@ export interface Article {
     kind: 'h1' | 'h2' | 'regular' | 'highlight'
     stamp: string
     commentsFeed: string
+    // New fields for proposal tracking
+    proposalId?: string
+    proposalStatus?: 'pending' | 'approved' | 'rejected'
+    proposalSubmittedAt?: number
 }
 
 export interface GlobalStateOnDisk {
@@ -83,6 +88,19 @@ export interface GlobalState {
     articles: Article[]
     collections: Record<string, string>
     assets: Asset[]
+}
+
+// Helper function to ensure proposalStatus is of the correct type
+function parseProposalStatus(status: any): 'pending' | 'approved' | 'rejected' | undefined {
+    if (!status) return undefined;
+    
+    const statusStr = String(status).toLowerCase();
+    
+    if (statusStr === 'pending' || statusStr === 'approved' || statusStr === 'rejected') {
+        return statusStr as 'pending' | 'approved' | 'rejected';
+    }
+    
+    return undefined;
 }
 
 export async function getGlobalState(json: Record<string, any>): Promise<GlobalState> {
@@ -146,7 +164,11 @@ export async function getGlobalState(json: Record<string, any>): Promise<GlobalS
                 banner: x.banner || null,
                 kind,
                 stamp: Types.asString(x.stamp),
-                commentsFeed: Types.asString(x.commentsFeed)
+                commentsFeed: Types.asString(x.commentsFeed),
+                // Handle proposal fields with proper type checking
+                proposalId: Types.asEmptiableString(x.proposalId),
+                proposalStatus: parseProposalStatus(x.proposalStatus),
+                proposalSubmittedAt: x.proposalSubmittedAt ? Types.asNumber(x.proposalSubmittedAt) : undefined
             }
         }),
         collections: Types.asObject(json.collections || {}) as Record<string, string>,

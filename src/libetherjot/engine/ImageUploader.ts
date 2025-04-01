@@ -6,7 +6,8 @@ interface UploadedFile {
 }
 
 export async function uploadImage(globalState: GlobalState, path: string, buffer: Buffer): Promise<UploadedFile> {
-    const hash = await (await globalState.swarm.newRawData(buffer, 'image/png')).save()
+    const uint8Array = new Uint8Array(buffer);
+    const hash = await (await globalState.swarm.newRawData(uint8Array, 'image/png')).save()
     return {
         reference: hash,
         path
